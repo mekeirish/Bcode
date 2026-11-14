@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070b">
 <meta name="color-scheme" content="dark">
-<title>Bcode</title>
+<title>B5</title>
 <style>
 /* Cyber glass : fond uni, verre translucide, filets cyan */
 :root {
@@ -232,6 +232,7 @@ label.chk input { width: 18px; height: 18px; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 0 0 1px rgba(34, 211, 238, .55), 0 0 18px rgba(34, 211, 238, .28); }
 .qb .ic { width: 18px; height: 18px; }
 .qb.cyan { background: rgba(34, 211, 238, .13); border-color: rgba(34, 211, 238, .45); color: #bdf4fc; }
+.qb.red { background: rgba(255, 107, 122, .13); border-color: rgba(255, 107, 122, .45); color: #ffc4c4; }
 .qb.green { background: rgba(52, 211, 153, .13); border-color: rgba(52, 211, 153, .42); color: #c2f5e0; }
 .qb.warn { background: rgba(251, 191, 36, .13); border-color: rgba(251, 191, 36, .45); color: #fde8b0; }
 .empty { color: var(--dim); text-align: center; padding: 26px 10px; font-size: 14px; }
@@ -451,6 +452,7 @@ label.chk input { width: 18px; height: 18px; }
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
 <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
 <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+<symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h13"/><path d="m14 5 3 3-3 3"/><path d="M20 16H7"/><path d="m10 13-3 3 3 3"/></symbol>
   </defs>
 </svg>
 
@@ -495,6 +497,7 @@ label.chk input { width: 18px; height: 18px; }
     <button class="btn hero" id="b-main"><svg class="ic"><use href="#i-zap"/></svg><span id="b-main-t">Analyser</span></button>
   </div>
 <div class="quick">
+<button class="qb red" id="qb-need" aria-label="Blocs demandés"><svg class="ic"><use href="#i-swap"/></svg>Dem.</button>
   <button class="qb cyan" id="qb-marked" aria-label="Copier le code balisé"><svg class="ic"><use href="#i-braces"/></svg>Bal</button>
   <button class="qb" id="qb-prompt" aria-label="Copier le prompt seul"><svg class="ic"><use href="#i-copy"/></svg>Prompt</button>
   <button class="qb cyan" id="qb-all" aria-label="Copier le prompt et le code balisé"><svg class="ic"><use href="#i-zap"/></svg>P+C</button>
@@ -3811,6 +3814,7 @@ $('qb-marked').onclick = () => {
 $('qb-prompt').onclick = () => copyText(PROMPT_TEXT, 'Prompt copié ✓');
 $('qb-all').onclick = () => copyAllForAI();
 $('qb-proj').onclick = () => { closeOv('adv'); renderCloudDialog(); openOv('clouddlg'); };
+$('qb-need').onclick = copyRequested;
 /* Dessine la liste des projets dans la modale de sélection (cartes cliquables) */
 function renderProjSel() {
   $('plist3').innerHTML = projects.list.map(p =>
