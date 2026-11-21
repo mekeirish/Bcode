@@ -771,6 +771,39 @@ label.chk input { width: 18px; height: 18px; }
 .qb.red { background: rgba(255, 107, 122, .13); border-color: rgba(255, 107, 122, .45); color: #ffc4c4; }
 .qb.green { background: rgba(52, 211, 153, .13); border-color: rgba(52, 211, 153, .42); color: #c2f5e0; }
 .qb.warn { background: rgba(251, 191, 36, .13); border-color: rgba(251, 191, 36, .45); color: #fde8b0; }
+/* Raccourci Prompt : les deux choix supplémentaires s'affichent au-dessus du bouton */
+.qb-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+.qb-wrap > .qb { flex: 1 1 0; min-width: 0; }
+.qb-wrap.open > #qb-prompt {
+  background: rgba(34, 211, 238, .18);
+  border-color: rgba(34, 211, 238, .55);
+  color: #bdf4fc;
+}
+.qb-pop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: popin .16s ease-out;
+}
+.qb-pop[hidden] { display: none; }
+.qb-pop .qb {
+  flex: 0 0 64px;
+  width: 100%;
+  background: linear-gradient(145deg, #1b2431, #121923);
+  border-color: var(--cyan-edge);
+  color: #bdf4fc;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
 .empty { color: var(--dim); text-align: center; padding: 26px 10px; font-size: 14px; }
 /* ---------- Avancé : sections, tuiles, interrupteurs, lignes compactes ---------- */
 .acc > summary .ic { width: 20px; height: 20px; flex: none; color: var(--accent); }
@@ -1157,19 +1190,20 @@ input[type=search].bw-in {
 #splitdlg .ib { width: 40px; height: 40px; }
 #splitdlg .pick input { width: 22px; height: 22px; }
 /* ---------- Modale Projets : liste compacte mobile ---------- */
-.pj-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.pj-head { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
 .pj-sum { flex: 1; min-width: 0; color: var(--dim); font-size: 12.5px; }
-.pj-search { margin: 0 0 8px; }
+.pj-search { margin: 0 0 6px; }
+.pj-search input[type=search] { height: 38px; font-size: 14px; }
 .pj {
-  margin: 7px 0;
+  margin: 5px 0;
   border: 1px solid var(--edge);
-  border-radius: 16px;
+  border-radius: 14px;
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, .065),
     rgba(255, 255, 255, .025)
   );
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .16);
   overflow: hidden;
   transition:
     border-color .18s,
@@ -1187,11 +1221,11 @@ input[type=search].bw-in {
 .pj-main {
   flex: 1;
   min-width: 0;
-  min-height: 60px;
+  min-height: 50px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 7px 9px 14px;
+  gap: 9px;
+  padding: 6px 4px 6px 12px;
   margin: 0;
   border: 0;
   background: transparent;
@@ -1211,13 +1245,13 @@ input[type=search].bw-in {
 .pj-dot.s-pend { background: var(--warn); opacity: 1; box-shadow: 0 0 8px rgba(251, 191, 36, .6); }
 .pj-dot.s-conf { background: var(--err); opacity: 1; box-shadow: 0 0 8px rgba(255, 107, 122, .6); }
 .pj-dot.s-new { background: #7fd1ff; opacity: 1; box-shadow: 0 0 8px rgba(127, 209, 255, .6); }
-.pj-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pj-nm { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14.5px; min-width: 0; }
+.pj-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pj-nm { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; min-width: 0; }
 .pj-nm .chipc { flex: none; margin: 0; white-space: nowrap; }
 .pj-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pj-sub { color: var(--dim); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pj-sub { color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pj-more {
-  flex: 0 0 52px;
+  flex: 0 0 44px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1225,7 +1259,7 @@ input[type=search].bw-in {
   background: transparent;
   color: var(--dim);
   font: inherit;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
@@ -1233,16 +1267,28 @@ input[type=search].bw-in {
   transition: color .16s ease, background .16s ease;
 }
 .pj-more[aria-expanded="true"] { color: var(--accent); background: rgba(34, 211, 238, .10); }
-.pj-conf { display: flex; padding: 0 10px 8px; }
-.pj-acts { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid rgba(255, 255, 255, .07); }
+.pj-conf { display: flex; padding: 0 8px 6px; }
+.pj-acts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 5px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
 .pj-acts[hidden] { display: none; }
-.pj-acts .sm { flex: 1 1 40%; height: 36px; padding: 0 10px; font-size: 12.5px; }
+.pj-acts .sm { min-height: 0; height: 34px; padding: 0 8px; border-radius: 10px; font-size: 12px; }
 .pj-ver:not(:empty) { padding: 0 12px 8px; border-top: 1px solid rgba(255, 255, 255, .07); }
 .vr { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid rgba(255, 255, 255, .06); font-size: 12.5px; }
 .vr:first-child { border-top: 0; }
 .vr-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vr-t span { color: var(--dim); }
 .vr .sm { height: 30px; padding: 0 10px; font-size: 12px; }
+/* Modale Projets : en-tête, notes et lignes d'actions resserrés */
+#clouddlg .ph { padding: 12px 13px 6px 17px; }
+#clouddlg .pb { padding-top: 2px; }
+#clouddlg .note { margin: 6px 0; padding: 7px 11px; font-size: 12.5px; }
+#clouddlg .row { margin-top: 6px; }
+#clouddlg .status { margin: 5px 2px; }
 
 .log details { background: rgba(255, 255, 255, .05); border: 1px solid var(--edge); border-radius: 12px; margin: 6px 0; }
 .log summary { padding: 9px 12px; cursor: pointer; font-size: 14px; word-break: break-word; }
@@ -1486,7 +1532,13 @@ input[type=search].bw-in {
 <div class="quick">
 <button class="qb red" id="qb-need" aria-label="Blocs demandés"><svg class="ic"><use href="#i-swap"/></svg>Dem.</button>
   <button class="qb cyan" id="qb-marked" aria-label="Copier le code balisé"><svg class="ic"><use href="#i-braces"/></svg>Bal</button>
-  <button class="qb" id="qb-prompt" aria-label="Copier le prompt seul"><svg class="ic"><use href="#i-copy"/></svg>Prompt</button>
+<div class="qb-wrap" id="qb-prompt-wrap">
+  <div class="qb-pop" id="qb-pop" hidden>
+    <button class="qb" id="qb-index" aria-label="Copier l'index des blocs"><svg class="ic"><use href="#i-braces"/></svg>Index</button>
+    <button class="qb" id="qb-remind" aria-label="Copier le rappel court"><svg class="ic"><use href="#i-copy"/></svg>Rappel</button>
+  </div>
+  <button class="qb" id="qb-prompt" aria-label="Copier le prompt seul" aria-expanded="false"><svg class="ic"><use href="#i-copy"/></svg>Prompt</button>
+</div>
   <button class="qb cyan" id="qb-all" aria-label="Copier le prompt et le code balisé"><svg class="ic"><use href="#i-zap"/></svg>P+C</button>
   <button class="qb warn" id="qb-proj" aria-label="Ouvrir les projets"><svg class="ic"><use href="#i-file"/></svg>Proj.</button>
 </div>
@@ -4339,6 +4391,46 @@ saveProjects();
 renderProjects();
 cloudRenameProject(p.id, p.name);
 }
+/* Duplique un projet : demande le nom de la copie, puis crée un projet indépendant (même code, même niveau) */
+async function duplicateProject(id) {
+  const p = projects.list.find(x => x.id === id);
+  if (!p) return;
+  const v = await askDialog({
+    title: 'Dupliquer le projet',
+    msg: 'Nom de la copie de « ' + p.name + ' » :',
+    input: true,
+    value: (p.name + ' (copie)').slice(0, 40),
+    placeholder: 'Nom du projet',
+    ok: 'Dupliquer'
+  });
+  const name = (v || '').trim();
+  if (!name) return;
+  if (id === projects.cur) save();
+  let s = projLocal(id);
+  if ((!s || typeof s.text !== 'string') && cloudToken.get()) {
+    try { s = await cloudFetchProject(id); } catch (e) { s = null; }
+  }
+  if (!s || typeof s.text !== 'string') {
+    notify('Duplication impossible : contenu du projet introuvable.', { kind: 'err', ms: 0 });
+    return;
+  }
+  const nid = 'p' + Date.now().toString(36);
+  const rec = {
+    text: id === projects.cur ? $('src').value : s.text,
+    level: s.level || '2',
+    snap: {},
+    _cloudUpdatedAt: 0,
+    _cloudHash: ''
+  };
+  if (!projPut(nid, rec)) {
+    notify('Stockage local plein : duplication impossible.', { kind: 'err', ms: 0 });
+    return;
+  }
+  projects.list.push({ id: nid, name: name.slice(0, 40) });
+  saveProjects();
+  renderProjects();
+  notify('Projet « ' + name.slice(0, 40) + ' » créé', { kind: 'ok' });
+}
 async function deleteProject(id) {
   const p = projects.list.find(x => x.id === id);
   if (!p) return;
@@ -5535,10 +5627,31 @@ $('bw-all').onclick = () => { bwOff.clear(); renderBetween(); };
 $('bw-none').onclick = () => { bwRes.forEach((x, i) => bwOff.add(i)); renderBetween(); };
 $('bw-copy').onclick = bwCopy;
 $('splitdlg-x').onclick = () => closeOv('splitdlg');
-$('qb-prompt').onclick = () => copyText(PROMPT_TEXT, 'Prompt copié ✓');
 $('qb-all').onclick = () => copyAllForAI();
 $('qb-proj').onclick = () => { closeOv('adv'); renderCloudDialog(); openOv('clouddlg'); };
 $('qb-need').onclick = copyRequested;
+/* Raccourci Prompt : ouvre / ferme les deux choix supplémentaires (Index, Rappel) au-dessus du bouton */
+function setPromptPop(on) {
+  $('qb-pop').hidden = !on;
+  $('qb-prompt-wrap').classList.toggle('open', on);
+  $('qb-prompt').setAttribute('aria-expanded', on ? 'true' : 'false');
+}
+/* Premier appui : déploie les choix. Appui quand ils sont déployés : copie le prompt seul. */
+$('qb-prompt').onclick = () => {
+  if ($('qb-pop').hidden) { setPromptPop(true); return; }
+  setPromptPop(false);
+  copyText(PROMPT_TEXT, 'Prompt copié ✓');
+};
+$('qb-index').onclick = () => {
+  setPromptPop(false);
+  if (!parseMarks($('src').value).blocks.length) { notify('Code non balisé : touchez « Analyser »', { kind: 'err' }); return; }
+  copyText(buildIndex($('src').value), 'Index copié ✓');
+};
+$('qb-remind').onclick = () => { setPromptPop(false); copyText(REMIND_TEXT, 'Rappel copié ✓'); };
+/* Un appui ailleurs referme les choix du raccourci Prompt */
+document.addEventListener('click', e => {
+  if (!$('qb-pop').hidden && !e.target.closest('#qb-prompt-wrap')) setPromptPop(false);
+});
 /* Dessine la liste des projets dans la modale de sélection (cartes cliquables) */
 function renderProjSel() {
   $('plist3').innerHTML = projects.list.map(p =>
@@ -6381,6 +6494,7 @@ if (fqs.length && !rows.length && !trash.length) html += '<div class="empty">Auc
     (conf ? '<div class="pj-conf"><button class="sm primary" style="flex:1" data-conflict="' + pid + '">Résoudre le conflit</button></div>' : '') +
     '<div class="pj-acts"' + (open ? '' : ' hidden') + '>' +
     (r.inCloud ? '<button class="sm" data-cloud-versions="' + pid + '">Versions</button>' : '') +
+    '<button class="sm" data-proj-dup="' + pid + '">Dupliquer</button>' +
     '<button class="sm" data-proj-ren="' + pid + '">Renommer</button>' +
     (r.hasLocal || !r.inCloud ? '<button class="sm" data-proj-del="' + pid + '">' + (r.inCloud || connected ? 'Retirer' : 'Supprimer') + '</button>' : '') +
     (r.inCloud ? '<button class="sm" data-trash="' + pid + '">Corbeille</button>' : '') +
@@ -6510,7 +6624,7 @@ try {
   $('cloud-refresh').onclick = () => renderCloudDialog();
 
   $('cloud-projects').addEventListener('click', async e => {
-const b = e.target.closest('button[data-menu], button[data-cloud-pull], button[data-cloud-versions], button[data-cloud-restore], button[data-proj-ren], button[data-proj-del], button[data-conflict], button[data-trash], button[data-untrash], button[data-purge], #cloud-new-proj');
+const b = e.target.closest('button[data-menu], button[data-cloud-pull], button[data-cloud-versions], button[data-cloud-restore], button[data-proj-ren], button[data-proj-dup], button[data-proj-del], button[data-conflict], button[data-trash], button[data-untrash], button[data-purge], #cloud-new-proj');
 if (!b) return;
     
     if (b.id === 'cloud-new-proj') {
@@ -6544,6 +6658,9 @@ if (b.dataset.menu) {
 } else if (b.dataset.cloudRestore) {
   const parts = b.dataset.cloudRestore.split('|');
   await cloudRestoreVersion(parts[0], parts[1]);
+} else if (b.dataset.projDup) {
+  await duplicateProject(b.dataset.projDup);
+  await renderCloudDialog();
 } else if (b.dataset.projRen) {
   await renameProject(b.dataset.projRen);
   await renderCloudDialog();
