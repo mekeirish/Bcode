@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070b">
 <meta name="color-scheme" content="dark">
-<title>Bcodefinal</title>
+<title>B5</title>
 <style>
 /* Système visuel — profondeur, surfaces, contours et accents centralisés */
 :root {
@@ -933,12 +933,12 @@ label.chk input { width: 18px; height: 18px; }
   margin: 8px 0 10px;
 }
 .split-counts button {
-  height: 32px;
-  min-width: 42px;
-  padding: 0 10px;
-  border-radius: 10px;
+  height: 40px;
+  min-width: 46px;
+  padding: 0 12px;
+  border-radius: 11px;
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text);
   background: linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03));
@@ -1031,38 +1031,46 @@ label.chk input { width: 18px; height: 18px; }
   color: var(--ok);
 }
 #splitdlg {
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 16px;
+  padding: 0;
   z-index: 90;
 }
 #splitdlg .panel {
-  max-width: 460px;
-  max-height: 88vh;
-  max-height: 88dvh;
-  border-radius: 22px;
-  border-bottom: 1px solid var(--edge);
-  padding-bottom: 0;
-  animation: popin .2s ease-out;
+  max-width: 560px;
+  height: 92vh;
+  height: 92dvh;
+  max-height: 92dvh;
+  border-radius: 26px 26px 0 0;
+}
+#splitdlg .pb {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 14px;
 }
 @keyframes popin {
   from { transform: scale(.96); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
 .split-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 4;
   display: flex;
   gap: 4px;
   margin: 0 0 12px;
   padding: 4px;
   border-radius: 14px;
-  background: rgba(0, 0, 0, .26);
+  background: rgba(12, 17, 26, .96);
   border: 1px solid var(--edge);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 .split-tabs button {
   flex: 1;
   min-width: 0;
-  height: 38px;
-  padding: 0 8px;
+  height: 44px;
+  padding: 0 6px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -1101,6 +1109,53 @@ label.chk input { width: 18px; height: 18px; }
   padding: 0 1px;
 }
 .bk.bs-off { opacity: .5; }
+.bs-more {
+  margin: 4px 0 10px;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .04);
+  overflow: hidden;
+}
+.bs-more > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--dim);
+  -webkit-tap-highlight-color: transparent;
+}
+.bs-more > summary::-webkit-details-marker { display: none; }
+.bs-more > summary::after { content: "▾"; margin-left: auto; color: var(--dim); }
+.bs-more[open] > summary::after { content: "▴"; color: var(--accent); }
+.bs-more[open] { border-color: rgba(34, 211, 238, .34); }
+.bs-more-in { padding: 0 8px 6px; }
+.bw-lbl {
+  display: block;
+  margin: 14px 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.bw-lbl:first-child { margin-top: 2px; }
+/* Police 16 px : évite le zoom automatique à la saisie sur iPhone */
+input[type=search].bw-in {
+  font: 16px/1.3 var(--mono);
+}
+.split-counts.bw-presets button {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+/* Zones de toucher plus grandes dans la modale */
+#splitdlg .ib { width: 40px; height: 40px; }
+#splitdlg .pick input { width: 22px; height: 22px; }
 /* ---------- Modale Projets : liste compacte mobile ---------- */
 .pj-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
 .pj-sum { flex: 1; min-width: 0; color: var(--dim); font-size: 12.5px; }
@@ -1590,10 +1645,11 @@ label.chk input { width: 18px; height: 18px; }
 <div class="pb">
   <div class="split-tabs" id="split-tabs" role="tablist">
     <button class="on" data-t="cut" role="tab" aria-selected="true">Découper</button>
-    <button data-t="blocs" role="tab" aria-selected="false">Chercher par blocs</button>
+    <button data-t="blocs" role="tab" aria-selected="false">Par blocs</button>
+    <button data-t="between" role="tab" aria-selected="false">Repères</button>
   </div>
   <div class="split-pane" id="split-pane-cut">
-    <div class="note">La découpe respecte les blocs de premier niveau : aucun bloc n'est tronqué.</div>
+    <div class="note">Parties équilibrées en nombre de lignes, sans jamais couper un bloc. Touchez une partie pour la copier.</div>
     <div class="sec" style="margin-top:6px">Nombre de parties</div>
     <div id="split-counts" class="split-counts"></div>
     <div class="split-q-wrap">
@@ -1604,11 +1660,18 @@ label.chk input { width: 18px; height: 18px; }
   </div>
   <div class="split-pane" id="split-pane-blocs" hidden>
     <div class="split-q-wrap">
-      <input type="search" id="bs-q" placeholder="Mot(s) à chercher dans les blocs…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input type="search" id="bs-q" placeholder="Mot(s) à chercher dans les blocs…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     </div>
-    <div id="bs-scope" class="split-counts"></div>
-    <div id="bs-opts" class="split-counts"></div>
     <div id="bs-langs" class="split-counts"></div>
+    <details class="bs-more">
+      <summary>Options de recherche <span class="cnt" id="bs-opt-n"></span></summary>
+      <div class="bs-more-in">
+        <div class="sec" style="margin-top:6px">Chercher dans</div>
+        <div id="bs-scope" class="split-counts"></div>
+        <div class="sec" style="margin-top:6px">Réglages</div>
+        <div id="bs-opts" class="split-counts"></div>
+      </div>
+    </details>
     <div id="bs-info" class="split-info"></div>
     <div class="btools" id="bs-tools" style="display:none">
       <button class="sm" id="bs-all">Tout cocher</button>
@@ -1618,6 +1681,33 @@ label.chk input { width: 18px; height: 18px; }
     <div class="selbar" id="bs-bar" hidden>
       <button class="sm primary" id="bs-copy" style="flex:1">Copier les blocs (<span id="bs-n">0</span>)</button>
       <button class="sm" id="bs-copy-ai" title="Copier prompt + index + blocs cochés">Prompt + blocs</button>
+    </div>
+  </div>
+  <div class="split-pane" id="split-pane-between" hidden>
+    <label class="bw-lbl" for="bw-start">Début</label>
+    <input type="search" class="bw-in" id="bw-start" placeholder="ex. function init" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+    <label class="bw-lbl" for="bw-end">Fin</label>
+    <input type="search" class="bw-in" id="bw-end" placeholder="ex. }" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <div class="bw-lbl">Raccourcis</div>
+    <div class="split-counts bw-presets" id="bw-presets">
+      <button data-s="/*" data-e="*/">/* … */</button>
+      <button data-s="&lt;!--" data-e="--&gt;">&lt;!-- … --&gt;</button>
+      <button data-s="&quot;" data-e="&quot;">" … "</button>
+      <button data-s="'" data-e="'">' … '</button>
+      <button data-s="&lt;script" data-e="&lt;/script&gt;">script</button>
+      <button data-s="&lt;style" data-e="&lt;/style&gt;">style</button>
+      <button data-e="\n">↵ fin de ligne</button>
+    </div>
+    <div class="bw-lbl">Réglages</div>
+    <div id="bw-opts" class="split-counts"></div>
+    <div id="bw-info" class="split-info"></div>
+    <div class="btools" id="bw-tools" style="display:none">
+      <button class="sm" id="bw-all">Tout cocher</button>
+      <button class="sm" id="bw-none">Tout décocher</button>
+    </div>
+    <div id="bw-list"></div>
+    <div class="selbar" id="bw-bar" hidden>
+      <button class="sm primary" id="bw-copy" style="flex:1">Copier les passages (<span id="bw-n">0</span>)</button>
     </div>
   </div>
 </div>
@@ -4902,11 +4992,11 @@ function renderSplitDlg() {
 }
 function openSplitDlg() {
   const text = $('src').value;
-  const { blocks } = parseMarks(text);
-  if (!blocks.length) {
-    notify('Code non balisé : touchez « Analyser »', { kind: 'err' });
+  if (!text.trim()) {
+    notify('Collez d\'abord du code', { kind: 'err' });
     return;
   }
+  const { blocks } = parseMarks(text);
   const maxN = blocks.filter(b => b.depth === 0).length;
   let saved = 0;
   try { saved = parseInt(localStorage.getItem(SPLIT_KEY), 10) || 0; } catch (e) { /* stockage indisponible */ }
@@ -4915,7 +5005,10 @@ function openSplitDlg() {
   const q = $('split-q');
   if (q) q.value = '';
   renderSplitDlg();
-  setSplitTab(maxN < 2 ? 'blocs' : bsOpt.tab);
+  let tab = bsOpt.tab;
+  if (!blocks.length) tab = 'between';
+  else if (maxN < 2 && tab === 'cut') tab = 'blocs';
+  setSplitTab(tab);
   openOv('splitdlg');
 }
 $('split-counts').addEventListener('click', e => {
@@ -5086,6 +5179,9 @@ function renderBlockSearch() {
   $('bs-langs').innerHTML = [['all', 'Tous'], ['js', 'JS'], ['css', 'CSS'], ['html', 'HTML']].map(l =>
     '<button data-l="' + l[0] + '"' + (bsOpt.lang === l[0] ? ' class="on"' : '') +
     (has && !cnt[l[0]] && bsOpt.lang !== l[0] ? ' disabled' : '') + '>' + l[1] + (has ? ' ' + cnt[l[0]] : '') + '</button>').join('');
+  /* Compteur d'options modifiées, visible même quand le panneau d'options est replié */
+  const nOpt = (bsOpt.scope !== 'both' ? 1 : 0) + (bsOpt.cs ? 1 : 0) + (bsOpt.ww ? 1 : 0) + (bsOpt.any ? 1 : 0) + (bsOpt.sub ? 0 : 1);
+  $('bs-opt-n').textContent = nOpt ? String(nOpt) : '';
 
   const info = $('bs-info'), bar = $('bs-bar');
   $('bs-tools').style.display = hits.length ? '' : 'none';
@@ -5148,23 +5244,30 @@ function bsCopy(withAi) {
     'Prompt + index + ' + n + ' bloc' + s + ' copiés ✓' + extra);
 }
 function setSplitTab(t, focus) {
-  t = t === 'blocs' ? 'blocs' : 'cut';
+  t = (t === 'blocs' || t === 'between') ? t : 'cut';
   $('split-pane-cut').hidden = t !== 'cut';
   $('split-pane-blocs').hidden = t !== 'blocs';
+  $('split-pane-between').hidden = t !== 'between';
   document.querySelectorAll('#split-tabs button').forEach(b => {
     const on = b.dataset.t === t;
     b.classList.toggle('on', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+  const pb = $('split-tabs').parentElement;
+  if (pb) pb.scrollTop = 0;
   if (t === 'blocs') {
     renderBlockSearch();
     if (focus) $('bs-q').focus();
+  } else if (t === 'between') {
+    bwOpen();
+    if (focus && !$('bw-start').value) $('bw-start').focus();
   }
 }
 $('split-tabs').addEventListener('click', e => {
   const b = e.target.closest('button[data-t]');
   if (!b) return;
-  bsOpt.tab = b.dataset.t === 'blocs' ? 'blocs' : 'cut';
+  const t = b.dataset.t;
+  bsOpt.tab = (t === 'blocs' || t === 'between') ? t : 'cut';
   bsSaveOpt();
   setSplitTab(bsOpt.tab, true);
 });
@@ -5208,6 +5311,229 @@ $('bs-all').onclick = () => { bsOff.clear(); renderBlockSearch(); };
 $('bs-none').onclick = () => { bsRes.forEach(h => bsOff.add(h.b.name)); renderBlockSearch(); };
 $('bs-copy').onclick = () => bsCopy(false);
 $('bs-copy-ai').onclick = () => bsCopy(true);
+const SPLIT_BW_KEY = 'blocs.split.bw';
+/* Réglages de l'onglet « Repères » (mémorisés) : s = début, e = fin */
+let bwOpt = (() => {
+  const d = { s: '', e: '', inc: true, cs: false, rx: false, clean: false };
+  try { return Object.assign(d, JSON.parse(localStorage.getItem(SPLIT_BW_KEY) || '{}') || {}); } catch (e) { return d; }
+})();
+/* Passages décochés (par numéro) : tout est coché par défaut */
+const bwOff = new Set();
+let bwRes = [], bwText = '', bwTimer = null, bwCapped = false;
+function bwSave() {
+  try { localStorage.setItem(SPLIT_BW_KEY, JSON.stringify(bwOpt)); } catch (e) { /* stockage indisponible */ }
+}
+/* Texte tapé → motif. Mode normal : \n et \t deviennent des caractères, le reste est cherché tel quel. */
+function bwPattern(s) {
+  if (bwOpt.rx) return s;
+  return s.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+/* Cherche chaque « début … fin » (premier repère de fin après le début, sans chevauchement) */
+function bwSearch(text) {
+  const S = bwOpt.s, E = bwOpt.e;
+  if (!S || !E) return { ready: false, res: [], err: '', why: '', capped: false };
+  let reS, reE;
+  try {
+    const fl = 'g' + (bwOpt.cs ? '' : 'i') + (bwOpt.rx ? 'm' : '');
+    reS = new RegExp(bwPattern(S), fl);
+    reE = new RegExp(bwPattern(E), fl);
+  } catch (e) {
+    return { ready: true, res: [], err: e.message, why: '', capped: false };
+  }
+  const res = [];
+  let pos = 0, why = '', capped = false;
+  while (pos <= text.length) {
+    reS.lastIndex = pos;
+    const m = reS.exec(text);
+    if (!m) { if (!res.length) why = 'start'; break; }
+    const me = m.index + m[0].length;
+    reE.lastIndex = me;
+    const n = reE.exec(text);
+    if (!n) { why = 'end'; break; }
+    const ne = n.index + n[0].length;
+    const a = bwOpt.inc ? m.index : me;
+    const b = bwOpt.inc ? ne : n.index;
+    if (b > a) {
+      if (res.length >= 500) { capped = true; break; }
+      res.push({ s: a, e: b });
+    }
+    pos = Math.max(ne, m.index + 1);
+  }
+  return { ready: true, res, err: '', why: res.length ? '' : why, capped };
+}
+/* Texte d'un passage tel qu'il sera copié */
+function bwTake(x) {
+  const t = bwText.slice(x.s, x.e);
+  return bwOpt.clean ? stripMarks(t) : t;
+}
+/* Aperçu : première ligne, dernière ligne, et « ⋯ » entre les deux si le passage est long */
+function bwSnippet(t) {
+  const L = t.split('\n').map(x => x.trim()).filter(Boolean);
+  if (!L.length) return '(vide)';
+  const cut = s => s.length > 110 ? s.slice(0, 110) + '…' : s;
+  if (L.length === 1) return cut(L[0]);
+  if (L.length === 2) return cut(L[0]) + '\n' + cut(L[1]);
+  return cut(L[0]) + '\n⋯\n' + cut(L[L.length - 1]);
+}
+/* Résumé et barre de copie selon les passages cochés */
+function bwUpdSel() {
+  const on = bwRes.filter((x, i) => !bwOff.has(i));
+  const lines = on.reduce((s, x) => s + x.lines, 0);
+  const chars = on.reduce((s, x) => s + (x.e - x.s), 0);
+  const info = $('bw-info');
+  info.className = 'split-info';
+  info.innerHTML = '<b>' + on.length + '</b> / ' + bwRes.length + (bwCapped ? '+' : '') + ' passage' + (bwRes.length > 1 ? 's' : '') +
+    ' coché' + (on.length > 1 ? 's' : '') + ' · ' + lines + ' l. · ' + Math.max(1, Math.round(chars / 1024)) + ' Ko';
+  $('bw-n').textContent = String(on.length);
+  $('bw-bar').hidden = !on.length;
+}
+function renderBetween() {
+  const box = $('bw-list');
+  if (!box) return;
+  $('bw-opts').innerHTML = [
+    ['inc', 'Avec repères', 'Inclure le début et la fin dans le texte copié', bwOpt.inc],
+    ['cs', 'Aa', 'Respecter les majuscules / minuscules', bwOpt.cs],
+    ['rx', 'Regex', 'Début et fin sont des expressions régulières', bwOpt.rx],
+    ['clean', 'Sans #BLOC', 'Retirer les marqueurs de blocs du texte copié', bwOpt.clean]
+  ].map(o => '<button data-o="' + o[0] + '" title="' + esc(o[2]) + '"' + (o[3] ? ' class="on"' : '') + '>' + o[1] + '</button>').join('');
+
+  const info = $('bw-info'), bar = $('bw-bar');
+  const text = $('src').value;
+  bwRes = [];
+  bwText = text;
+  bwCapped = false;
+  bar.hidden = true;
+  $('bw-tools').style.display = 'none';
+  if (!text.trim()) {
+    info.className = 'split-info warn';
+    info.textContent = 'Aucun code à parcourir';
+    box.innerHTML = '';
+    return;
+  }
+  const r = bwSearch(text);
+  if (!r.ready) {
+    info.className = 'split-info';
+    info.textContent = 'Tapez un début et une fin · « \\n » = retour à la ligne';
+    box.innerHTML = '<div class="empty">Tous les passages entre les deux repères s\'afficheront ici.</div>';
+    return;
+  }
+  if (r.err) {
+    info.className = 'split-info warn';
+    info.textContent = 'Expression invalide : ' + r.err;
+    box.innerHTML = '';
+    return;
+  }
+  if (!r.res.length) {
+    info.className = 'split-info warn';
+    info.textContent = r.why === 'start' ? 'Début introuvable' : r.why === 'end' ? 'Début trouvé, mais aucune fin après lui' : 'Aucun passage trouvé';
+    box.innerHTML = '';
+    return;
+  }
+  /* Numéro de ligne et nombre de lignes de chaque passage */
+  let ln = 1, at = 0;
+  r.res.forEach(x => {
+    for (;;) {
+      const i = text.indexOf('\n', at);
+      if (i < 0 || i >= x.s) break;
+      ln++;
+      at = i + 1;
+    }
+    x.line = ln;
+    x.lines = (text.slice(x.s, x.e).match(/\n/g) || []).length + 1;
+  });
+  bwRes = r.res;
+  bwCapped = r.capped;
+  $('bw-tools').style.display = '';
+  const shown = r.res.slice(0, 200);
+  box.innerHTML = shown.map((x, i) => {
+    const on = !bwOff.has(i);
+    return '<div class="bk' + (on ? '' : ' bs-off') + '">' +
+      '<div class="bk-top"><label class="pick"><input type="checkbox" data-wp="' + i + '"' + (on ? ' checked' : '') + '>' +
+      '<span class="bk-nm">Passage ' + (i + 1) + ' · ligne ' + x.line + '</span></label></div>' +
+      '<div class="bs-snip">' + esc(bwSnippet(bwTake(x))) + '</div>' +
+      '<div class="bk-bot"><div class="bk-info">' + x.lines + ' l. · ' + (x.e - x.s) + ' car.</div>' +
+      '<div class="acts" data-i="' + i + '">' +
+      '<button class="ib" data-a="wcopy" aria-label="Copier ce passage" title="Copier ce passage"><svg class="ic"><use href="#i-copy"/></svg></button>' +
+      '<button class="ib" data-a="wgoto" aria-label="Aller au passage" title="Aller au passage"><svg class="ic"><use href="#i-goto"/></svg></button></div></div></div>';
+  }).join('') + (r.res.length > shown.length ? '<div class="empty">… ' + (r.res.length - shown.length) + ' autres (inclus dans la copie)</div>' : '');
+  bwUpdSel();
+}
+/* Ouverture de l'onglet : remet les derniers repères dans les champs puis cherche */
+function bwOpen() {
+  const a = $('bw-start'), b = $('bw-end');
+  if (a.value !== bwOpt.s) a.value = bwOpt.s;
+  if (b.value !== bwOpt.e) b.value = bwOpt.e;
+  bwOff.clear();
+  renderBetween();
+}
+function bwOnInput() {
+  bwOpt.s = $('bw-start').value;
+  bwOpt.e = $('bw-end').value;
+  bwSave();
+  clearTimeout(bwTimer);
+  bwTimer = setTimeout(() => { bwOff.clear(); renderBetween(); }, 150);
+}
+/* Copie les passages cochés, séparés par une ligne vide */
+function bwCopy() {
+  const list = bwRes.filter((x, i) => !bwOff.has(i));
+  if (!list.length) { notify('Cochez d\'abord des passages', { kind: 'err' }); return; }
+  const n = list.length;
+  copyText(list.map(x => bwTake(x)).join('\n\n'), n + ' passage' + (n > 1 ? 's' : '') + ' copié' + (n > 1 ? 's' : '') + ' ✓');
+}
+function bwGoto(x) {
+  const ta = $('src');
+  closeOv('splitdlg');
+  const line = bwText.slice(0, x.s).split('\n').length - 1;
+  ta.scrollTop = Math.max(0, line * codeFs * 1.5 - 30);
+  ta.setSelectionRange(x.s, x.e);
+}
+$('bw-start').addEventListener('input', bwOnInput);
+$('bw-end').addEventListener('input', bwOnInput);
+$('bw-start').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('bw-end').focus(); }
+});
+$('bw-end').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('bw-end').blur(); }
+});
+/* Raccourcis : en mode Regex, les repères sont échappés pour rester valides */
+$('bw-presets').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const fix = v => (bwOpt.rx && v !== '\\n') ? v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : v;
+  if (b.dataset.s !== undefined) $('bw-start').value = fix(b.dataset.s);
+  if (b.dataset.e !== undefined) $('bw-end').value = fix(b.dataset.e);
+  bwOnInput();
+  buzz(8);
+});
+$('bw-opts').addEventListener('click', e => {
+  const b = e.target.closest('button[data-o]');
+  if (!b) return;
+  bwOpt[b.dataset.o] = !bwOpt[b.dataset.o];
+  bwSave();
+  bwOff.clear();
+  renderBetween();
+  buzz(8);
+});
+$('bw-list').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-a]');
+  if (!btn) return;
+  const x = bwRes[parseInt(btn.parentElement.dataset.i, 10)];
+  if (!x) return;
+  if (btn.dataset.a === 'wcopy') copyText(bwTake(x), 'Passage copié ✓');
+  else if (btn.dataset.a === 'wgoto') bwGoto(x);
+});
+$('bw-list').addEventListener('change', e => {
+  const c = e.target.closest('input[data-wp]');
+  if (!c) return;
+  const i = parseInt(c.dataset.wp, 10);
+  if (c.checked) bwOff.delete(i); else bwOff.add(i);
+  const card = c.closest('.bk');
+  if (card) card.classList.toggle('bs-off', !c.checked);
+  bwUpdSel();
+});
+$('bw-all').onclick = () => { bwOff.clear(); renderBetween(); };
+$('bw-none').onclick = () => { bwRes.forEach((x, i) => bwOff.add(i)); renderBetween(); };
+$('bw-copy').onclick = bwCopy;
 $('splitdlg-x').onclick = () => closeOv('splitdlg');
 $('qb-prompt').onclick = () => copyText(PROMPT_TEXT, 'Prompt copié ✓');
 $('qb-all').onclick = () => copyAllForAI();
