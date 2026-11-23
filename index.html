@@ -2490,6 +2490,36 @@ function jsBlocks(src, a, b, maxLevel) {
   const ctx = { src, sig: B.sig, mt: B.mt, a, maxLevel };
   return { blocks: parseRange(ctx, 0, B.sig.length, 1), unbalanced: B.unbalanced };
 }
+/* Le moteur JS accepte-t-il ce morceau de code ? (analyse seulement, rien n'est exécuté) */
+function jsParses(code) {
+  if (/^\s*(import|export)\s/m.test(code)) return true;
+  try { new Function(code); return true; } catch (e) { /* essai suivant */ }
+  try { new Function('async function __f() {\n' + code + '\n}'); return true; } catch (e) { return false; }
+}
+/* Vérifie chaque bloc JS de premier niveau avec le moteur JS. Un bloc invalide (frontière mal placée par
+   l'analyseur) est fusionné avec les suivants jusqu'à devenir valide : une instruction n'est jamais coupée. */
+function healBlocks(src, list) {
+  const out = [];
+  let merged = 0, i = 0;
+  while (i < list.length) {
+    const b = list[i];
+    if (jsParses(src.slice(b.s, b.e))) { out.push(b); i++; continue; }
+    let k = i + 1, ok = false;
+    while (k < list.length && k < i + 80) {
+      if (jsParses(src.slice(b.s, list[k].e))) { ok = true; break; }
+      k++;
+    }
+    if (!ok) { out.push(b); i++; continue; }
+    out.push({
+      s: b.s, e: list[k].e, lang: 'js', kind: 'code',
+      name: 'code:fusion_' + sanitizeName(b.name.replace(/^[^:]*:/, ''), 24),
+      children: []
+    });
+    merged += k - i;
+    i = k + 1;
+  }
+  return { blocks: out, merged };
+}
 /* ================================================================
    03 — CSS, HTML, analyse globale et pose des marqueurs
    ================================================================ */
@@ -2708,16 +2738,24 @@ function analyze(srcRaw, opt) {
   const { root, segs } = parseHTML(src);
   let all = htmlBlocks(root, src, maxLevel);
   let n = 0;
-  for (const sg of segs) {
-    n++;
-    if (sg.type === 'js') {
-      const r = jsBlocks(src, sg.a, sg.b, maxLevel);
-      if (r.unbalanced) warnings.push('Script n°' + n + ' : parenthèses/accolades non équilibrées (' + r.unbalanced + ') — découpage approximatif.');
-      all = all.concat(r.blocks);
+for (const sg of segs) {
+  n++;
+  if (sg.type === 'js') {
+    const r = jsBlocks(src, sg.a, sg.b, maxLevel);
+    let blocks = r.blocks;
+    if (jsParses(src.slice(sg.a, sg.b))) {
+      const h = healBlocks(src, blocks);
+      blocks = h.blocks;
+      if (h.merged) warnings.push('Script n°' + n + ' : ' + h.merged + ' bloc(s) fusionné(s) pour ne jamais couper une instruction (le JS contient une construction que l\'analyseur lit mal). Aucun bloc n\'est cassé.');
+      else if (r.unbalanced) warnings.push('Script n°' + n + ' : lecture JS approximative (' + r.unbalanced + '), mais le code est valide et chaque bloc de premier niveau a été vérifié.');
     } else {
-      all = all.concat(cssBlocks(src, sg.a, sg.b, maxLevel, 1));
+      warnings.push('Script n°' + n + ' : ce code JS a une erreur de syntaxe, le découpage peut être faux. Corrigez-la avant d\'envoyer à l\'IA (touchez « Tester »).');
     }
+    all = all.concat(blocks);
+  } else {
+    all = all.concat(cssBlocks(src, sg.a, sg.b, maxLevel, 1));
   }
+}
   let flat = flatten(all, []);
   flat.sort((x, y) => x.s - y.s || y.e - x.e);
   /* Vérifie l'imbrication (aucun chevauchement partiel) */
@@ -2868,69 +2906,77 @@ function applyOps(state, ops) {
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   const log = [];
   let lastAdded = null;
-  for (let o of ops) {
-    const { blocks } = parseMarks(text);
-    /* Plusieurs blocs à la suite d'un seul #APRES / #AVANT : un « remplacement » dont le nom
-       n'existe pas, juste après une insertion, est inséré après le bloc précédemment ajouté */
-    const prevAdded = lastAdded;
-    lastAdded = null;
-    if (o.op === 'replace' && prevAdded && !findBlock(blocks, o.name)) {
-      o = { op: 'after', ref: prevAdded, name: o.name, text: o.text };
-    }
-    const refName = (o.op === 'after' || o.op === 'before') ? o.ref : o.name;
-    const hit = findBlock(blocks, refName);
-    if (!hit) {
-      const bare = refName.includes(':') ? refName.split(':').pop() : refName;
-      const near = blocks.filter(b => b.name.toLowerCase().includes(bare.toLowerCase())).slice(0, 3).map(b => b.name);
-      log.push({ ok: false, name: refName, msg: 'Bloc introuvable : ' + refName + (near.length ? ' (proche : ' + near.join(', ') + ')' : '') });
-      continue;
-    }
-    const b = hit.block;
-    const region = text.slice(b.outerStart, b.outerEnd);
-    if (o.op === 'delete') {
-      text = text.slice(0, b.outerStart) + text.slice(b.outerEnd);
-      log.push({ ok: true, name: b.name, msg: 'Supprimé : ' + b.name, oldText: stripMarks(region), newText: '' });
-      continue;
-    }
-    let nt = o.text.replace(/\r?\n/g, eol);
-    const ab = abbrevLine(stripMarks(nt), o.op === 'replace' ? stripMarks(region) : '');
-    if (ab) {
-      log.push({ ok: false, name: o.name, msg: 'Bloc abrégé refusé : « ' + ab + ' » — renvoyer le bloc complet, sans abréviation' });
-      continue;
-    }
-    if (o.op === 'replace') {
-      nt = normalizeOuter(nt, b.name, b.html);
-      nt = fixEnds(nt, region);
-      text = text.slice(0, b.outerStart) + nt + text.slice(b.outerEnd);
-      const warn = [checkCode(b.lang, stripMarks(nt)), lostSubs(region, nt)].filter(Boolean).join(' · ') || null;
-      log.push({ ok: true, name: b.name, msg: 'Remplacé : ' + b.name + (hit.exact ? '' : ' (nom « ' + o.name + ' » corrigé)'), warn, oldText: stripMarks(region), newText: stripMarks(nt) });
-    } else {
-      const nm = o.name;
-      const dup = blocks.find(x => x.name === nm);
-      if (dup) {
-        /* Nom déjà pris : jamais de renommage silencieux (l'IA ne le saurait pas) */
-        if (stripMarks(text.slice(dup.outerStart, dup.outerEnd)).trim() === stripMarks(nt).trim()) {
-          lastAdded = nm;
-          log.push({ ok: true, name: nm, msg: 'Déjà présent (identique, ignoré) : ' + nm });
-        } else {
-          log.push({ ok: false, name: nm, msg: 'Ajout refusé : « ' + nm + ' » existe déjà. Pour le modifier, renvoyer le bloc sans #APRES / #AVANT' });
-        }
-        continue;
-      }
-      nt = normalizeOuter(nt, nm, b.html);
-      if (!/\n$/.test(nt)) nt += eol;
-      if (o.op === 'after') {
-        const pre = /\n$/.test(region) ? '' : eol;
-        text = text.slice(0, b.outerEnd) + pre + nt + text.slice(b.outerEnd);
-      } else {
-        text = text.slice(0, b.outerStart) + nt + text.slice(b.outerStart);
-      }
-      lastAdded = nm;
-      const lang = nm.startsWith('css:') ? 'css' : nm.startsWith('html:') ? 'html' : 'js';
-      const warn = [/^[A-Za-z]+:/.test(nm) ? null : 'nom sans préfixe (fn:, css:, html:, const:…)', checkCode(lang, stripMarks(nt))].filter(Boolean).join(' · ') || null;
-      log.push({ ok: true, name: nm, msg: 'Ajouté ' + (o.op === 'after' ? 'après ' : 'avant ') + b.name + ' : ' + nm, warn, oldText: '', newText: stripMarks(nt) });
-    }
+for (let o of ops) {
+  const { blocks } = parseMarks(text);
+  /* Plusieurs blocs à la suite d'un seul #APRES / #AVANT : un « remplacement » dont le nom
+     n'existe pas, juste après une insertion, est inséré après le bloc précédemment ajouté */
+  const prevAdded = lastAdded;
+  lastAdded = null;
+  if (o.op === 'replace' && prevAdded && !findBlock(blocks, o.name)) {
+    o = { op: 'after', ref: prevAdded, name: o.name, text: o.text };
   }
+  const refName = (o.op === 'after' || o.op === 'before') ? o.ref : o.name;
+  const hit = findBlock(blocks, refName);
+  if (!hit) {
+    const bare = refName.includes(':') ? refName.split(':').pop() : refName;
+    const near = blocks.filter(b => b.name.toLowerCase().includes(bare.toLowerCase())).slice(0, 3).map(b => b.name);
+    log.push({ ok: false, name: refName, msg: 'Bloc introuvable : ' + refName + (near.length ? ' (proche : ' + near.join(', ') + ')' : '') });
+    continue;
+  }
+  const b = hit.block;
+  const region = text.slice(b.outerStart, b.outerEnd);
+  if (o.op === 'delete') {
+    text = text.slice(0, b.outerStart) + text.slice(b.outerEnd);
+    log.push({ ok: true, name: b.name, msg: 'Supprimé : ' + b.name, oldText: stripMarks(region), newText: '' });
+    continue;
+  }
+  let nt = o.text.replace(/\r?\n/g, eol);
+  /* Une balise fermante de script écrite en clair dans du JS fermerait le script : elle est échappée automatiquement */
+  const jsLang = o.op === 'replace' ? b.lang === 'js' : !/^(css|html):/.test(o.name);
+  let fixedEnd = false;
+  if (jsLang && /<\/script/i.test(nt)) {
+    nt = nt.replace(/<\/(script)/gi, '<\\/$1');
+    fixedEnd = true;
+  }
+  const endWarn = fixedEnd ? 'une balise fermante de script écrite en clair a été échappée (elle fermait le script)' : null;
+  const ab = abbrevLine(stripMarks(nt), o.op === 'replace' ? stripMarks(region) : '');
+  if (ab) {
+    log.push({ ok: false, name: o.name, msg: 'Bloc abrégé refusé : « ' + ab + ' » — renvoyer le bloc complet, sans abréviation' });
+    continue;
+  }
+  if (o.op === 'replace') {
+    nt = normalizeOuter(nt, b.name, b.html);
+    nt = fixEnds(nt, region);
+    text = text.slice(0, b.outerStart) + nt + text.slice(b.outerEnd);
+    const warn = [checkCode(b.lang, stripMarks(nt)), lostSubs(region, nt), endWarn].filter(Boolean).join(' · ') || null;
+    log.push({ ok: true, name: b.name, msg: 'Remplacé : ' + b.name + (hit.exact ? '' : ' (nom « ' + o.name + ' » corrigé)'), warn, oldText: stripMarks(region), newText: stripMarks(nt) });
+  } else {
+    const nm = o.name;
+    const dup = blocks.find(x => x.name === nm);
+    if (dup) {
+      /* Nom déjà pris : jamais de renommage silencieux (l'IA ne le saurait pas) */
+      if (stripMarks(text.slice(dup.outerStart, dup.outerEnd)).trim() === stripMarks(nt).trim()) {
+        lastAdded = nm;
+        log.push({ ok: true, name: nm, msg: 'Déjà présent (identique, ignoré) : ' + nm });
+      } else {
+        log.push({ ok: false, name: nm, msg: 'Ajout refusé : « ' + nm + ' » existe déjà. Pour le modifier, renvoyer le bloc sans #APRES / #AVANT' });
+      }
+      continue;
+    }
+    nt = normalizeOuter(nt, nm, b.html);
+    if (!/\n$/.test(nt)) nt += eol;
+    if (o.op === 'after') {
+      const pre = /\n$/.test(region) ? '' : eol;
+      text = text.slice(0, b.outerEnd) + pre + nt + text.slice(b.outerEnd);
+    } else {
+      text = text.slice(0, b.outerStart) + nt + text.slice(b.outerStart);
+    }
+    lastAdded = nm;
+    const lang = nm.startsWith('css:') ? 'css' : nm.startsWith('html:') ? 'html' : 'js';
+    const warn = [/^[A-Za-z]+:/.test(nm) ? null : 'nom sans préfixe (fn:, css:, html:, const:…)', checkCode(lang, stripMarks(nt)), endWarn].filter(Boolean).join(' · ') || null;
+    log.push({ ok: true, name: nm, msg: 'Ajouté ' + (o.op === 'after' ? 'après ' : 'avant ') + b.name + ' : ' + nm, warn, oldText: '', newText: stripMarks(nt) });
+  }
+}
   return { text, log };
 }
 
@@ -3066,6 +3112,8 @@ RÈGLES DE RÉPONSE (strictes) :
 8. Garde un code lisible et bien indenté (jamais minifié).
 9. FORMAT DE SORTIE : toute ta réponse contient UN SEUL bloc de code, clôturé par 4 backticks (\`\`\`\`). Tous les blocs modifiés ou ajoutés y figurent à la suite, dans l'ordre, même en mélangeant HTML, CSS et JS, même avec plusieurs #APRES / #AVANT / #SUPPRIMER. Jamais un bloc de code par langage ni par bloc. Aucun texte entre les blocs ni dans le bloc de code ; une courte phrase avant ou après suffit. Je copie ce bloc de code d'un seul geste : tout ce qui est en dehors est perdu.
 10. Si le bloc à modifier n'est pas dans ce que je t'ai envoyé, demande-le-moi par son nom.
+11. Dans du JavaScript, n'écris jamais « <\/script> » en clair : écris « <\\/script> ». Ne place jamais de marqueurs #BLOC/#FIN à l'intérieur d'une chaîne ou d'un template (backticks).
+12. Dans l'index, « contient : … » liste les fonctions que renferme un bloc. Pour demander un bloc, donne son NOM EXACT de l'index (jamais un nom de fonction seul), et ne modifie jamais un bloc qui ne contient pas le code concerné.
 
 Forme exacte de ta réponse (exemple de structure) :
 \`\`\`\`html
@@ -3083,8 +3131,47 @@ Je vais maintenant donner le code balisé. Réponds simplement « Prêt », puis
 
 function buildIndex(text) {
   const { blocks } = parseMarks(text);
-  return 'INDEX DES BLOCS (nom — nombre de lignes) :\n' +
-    blocks.map(b => '  '.repeat(b.depth) + b.name + ' — ' + b.lines + ' l.').join('\n');
+  const items = bsIndex(text);
+  return 'INDEX DES BLOCS (nom — nombre de lignes — « contient » : fonctions déclarées dans le bloc) :\n' +
+    blocks.map((b, i) => {
+      const bare = b.name.replace(/^[^:]*:/, '').replace(/#\d+$/, '');
+      const syms = blockSymbols(items[i], b).filter(s => s !== bare).slice(0, 8);
+      return '  '.repeat(b.depth) + b.name + ' — ' + b.lines + ' l.' + (syms.length ? ' — contient : ' + syms.join(', ') : '');
+    }).join('\n');
+}
+/* Fonctions et classes déclarées dans le contenu propre d'un bloc JS (sans ses sous-blocs) */
+function blockSymbols(it, b) {
+  if (!it || b.lang !== 'js') return [];
+  const code = it.own, out = [], seen = new Set();
+  const add = nm => { if (nm && !seen.has(nm)) { seen.add(nm); out.push(nm); } };
+  const reFn = /(?:^|[^\w$.])function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/g;
+  const reCl = /(?:^|[^\w$.])class\s+([A-Za-z_$][\w$]*)/g;
+  const reAr = /(?:^|[^\w$.])(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:function\b|\([^()]*\)\s*=>|[A-Za-z_$][\w$]*\s*=>)/g;
+  let m;
+  while ((m = reFn.exec(code))) add(m[1]);
+  while ((m = reCl.exec(code))) add(m[1]);
+  while ((m = reAr.exec(code))) add(m[1]);
+  return out;
+}
+/* Blocs qui déclarent une fonction citée dans un texte (entre backticks, avec « () » ou en camelCase) */
+function symbolBlocks(src, t) {
+  const cand = new Set();
+  const reTick = /`([A-Za-z_$][\w$.]*)(?:\(\))?`/g;
+  const reCall = /\b([A-Za-z_$][\w$]*)\(\)/g;
+  const reCamel = /\b[a-z][a-z0-9]*[A-Z][\w$]*\b/g;
+  const reFnTxt = /\bfunction\s+([A-Za-z_$][\w$]*)/g;
+  let m;
+  while ((m = reTick.exec(t))) cand.add(m[1].split('.').pop());
+  while ((m = reCall.exec(t))) cand.add(m[1]);
+  while ((m = reCamel.exec(t))) cand.add(m[0]);
+  while ((m = reFnTxt.exec(t))) cand.add(m[1]);
+  const { blocks } = parseMarks(src);
+  const items = bsIndex(src);
+  const out = [];
+  blocks.forEach((b, i) => {
+    if (blockSymbols(items[i], b).some(s => s.length >= 3 && cand.has(s))) out.push(b);
+  });
+  return out.length > 12 ? out.slice(0, 12) : out;
 }
 /* ================================================================
    05 — Interface (écran unique, feuille « Avancé », notifications flottantes)
@@ -4155,10 +4242,11 @@ async function copyRequested() {
       i = work.indexOf(b.name);
     }
   });
-  const list = topBlocks(hit);
-  if (!list.length) { notify('Aucun nom de bloc reconnu dans le texte collé', { kind: 'err' }); return; }
-  const code = list.map(b => src.slice(b.outerStart, b.outerEnd)).join('').replace(/\n$/, '');
-  const f = fenceFor(code);
+symbolBlocks(src, t).forEach(b => { if (!hit.some(x => x.name === b.name)) hit.push(b); });
+const list = topBlocks(hit);
+if (!list.length) { notify('Aucun nom de bloc ni de fonction reconnu dans le texte collé', { kind: 'err' }); return; }
+const code = list.map(b => src.slice(b.outerStart, b.outerEnd)).join('').replace(/\n$/, '');
+const f = fenceFor(code);
   copyText('Voici les blocs demandés :\n\n' + f + 'html\n' + code + '\n' + f,
     list.length + ' bloc' + (list.length > 1 ? 's' : '') + ' copié' + (list.length > 1 ? 's' : '') + ' ✓');
 }
