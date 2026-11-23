@@ -7313,6 +7313,60 @@ async function cloudPurgeProject(id) {
   }
 }
 initCloud();
+/* Appui long sur le nuage : sauvegarde immédiate du projet actif */
+let cloudLP = false, cloudLPTimer = null;
+async function cloudSaveNow() {
+  if (!cloudToken.get()) {
+    notify('Cloud non connecté : impossible de sauvegarder.', {
+      kind: 'warn',
+      actions: [{ label: 'Connecter', fn: () => { renderCloudDialog(); openOv('clouddlg'); } }]
+    });
+    return;
+  }
+  if (!save()) {
+    notify('Sauvegarde annulée : impossible d\'enregistrer l\'état actuel sur l\'appareil.', { kind: 'err', ms: 0 });
+    return;
+  }
+  const id = projects.cur;
+  notify('Sauvegarde sur le Cloud…', { kind: 'ok', key: 'cloudnow', ms: 0 });
+  try {
+    const r = await cloudSaveProject(id);
+    dismissKey('cloudnow');
+    if (r && r.skipped) {
+      notify('Déjà à jour sur le Cloud ✓', { kind: 'ok', ms: 1800 });
+    } else {
+      cloudSync.mark();
+      notify('Projet sauvegardé sur le Cloud ✓', { kind: 'ok', ms: 2200 });
+    }
+  } catch (e) {
+    dismissKey('cloudnow');
+    if (e && e.conflict) notifyConflict(id);
+    else notify('Sauvegarde Cloud impossible : ' + e.message, { kind: 'err', ms: 0 });
+  }
+  updateCloudIcon();
+  if (isOpen('clouddlg')) renderCloudDialog();
+}
+$('b-cloud').addEventListener('pointerdown', () => {
+  cloudLP = false;
+  clearTimeout(cloudLPTimer);
+  cloudLPTimer = setTimeout(() => {
+    cloudLP = true;
+    buzz(20);
+    cloudSaveNow();
+  }, 600);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+  $('b-cloud').addEventListener(ev, () => clearTimeout(cloudLPTimer))
+);
+$('b-cloud').addEventListener('contextmenu', e => e.preventDefault());
+/* Après un appui long, le clic qui suit ne doit pas ouvrir la modale Projets */
+document.addEventListener('click', e => {
+  if (cloudLP && e.target.closest && e.target.closest('#b-cloud')) {
+    cloudLP = false;
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}, true);
 /* Sauvegarde automatique, file d'attente hors-ligne, écran de conflit, écriture sûre à la fermeture */
 function initSync() {
   const cb = $('cloud-auto');
