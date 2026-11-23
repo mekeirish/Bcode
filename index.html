@@ -3755,9 +3755,10 @@ function dismissKey(key) {
 /* o : { kind: ok|warn|err, ms (0 = reste affichée), key, actions: [{label, fn}] } */
 function notify(msg, o) {
   o = o || {};
-  if (o.kind === 'err') buzz([35, 60, 35]);
-  else if (o.kind === 'warn') buzz(45);
-  else if (o.key === 'apply') buzz(28);
+if (o.kind === 'err') buzz([35, 60, 35]);
+else if (o.kind === 'warn') buzz(45);
+else if (o.key === 'apply') buzz(28);
+notifySound(o.kind, o.key);
   const box = $('notifs');
   let el = o.key ? box.querySelector('[data-key="' + o.key + '"]') : null;
   if (!el) {
@@ -4861,6 +4862,49 @@ function tick(strong) {
     g.connect(audioCtx.destination);
     o.start(t);
     o.stop(t + 0.09);
+  } catch (e) { /* audio indisponible */ }
+}
+/* ---------- Sons des notifications ----------
+   Chaque note : [fréquence Hz, délai s, durée s, forme d'onde, volume, fréquence finale (glissando, facultatif)] */
+const NOTIF_SOUNDS = {
+  ok: [[1046, 0, 0.09, 'sine', 0.05], [1318, 0.08, 0.13, 'sine', 0.05]],
+  info: [[784, 0, 0.11, 'sine', 0.04]],
+  warn: [[740, 0, 0.1, 'triangle', 0.06], [740, 0.15, 0.12, 'triangle', 0.06]],
+  err: [[392, 0, 0.14, 'sawtooth', 0.03, 330], [262, 0.15, 0.24, 'sawtooth', 0.03, 196]],
+  apply: [[523, 0, 0.08, 'sine', 0.05], [659, 0.07, 0.08, 'sine', 0.05], [784, 0.14, 0.08, 'sine', 0.05], [1046, 0.21, 0.2, 'sine', 0.055]],
+  cloud: [[1568, 0, 0.07, 'sine', 0.025], [2093, 0.07, 0.11, 'sine', 0.022]],
+  conflict: [[622, 0, 0.09, 'triangle', 0.055], [466, 0.11, 0.09, 'triangle', 0.055], [622, 0.22, 0.14, 'triangle', 0.055]],
+  busy: [[523, 0, 0.14, 'sine', 0.035]],
+  tick: [[880, 0, 0.035, 'sine', 0.03]]
+};
+/* Notifications repérées par leur clé : leur son prend le pas sur celui de leur type (sauf avertissement et erreur) */
+const NOTIF_KEY_SOUND = { apply: 'apply', autocloud: 'cloud', pull: 'busy', purge: 'busy', fs: 'tick' };
+/* Joue une note de NOTIF_SOUNDS à partir de l'instant t0 */
+function playTone(n, t0) {
+  const t = t0 + n[1];
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = n[3];
+  o.frequency.setValueAtTime(n[0], t);
+  if (n[5]) o.frequency.exponentialRampToValueAtTime(n[5], t + n[2]);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(n[4], t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + n[2]);
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + n[2] + 0.03);
+}
+/* Son d'une notification : selon sa clé, sinon selon son type (ok, warn, err ou info) */
+function notifySound(kind, key) {
+  if (!soundOn) return;
+  let name = kind === 'ok' || kind === 'warn' || kind === 'err' ? kind : 'info';
+  if (key && key.indexOf('conflict-') === 0) name = 'conflict';
+  else if (key && NOTIF_KEY_SOUND[key] && kind !== 'err' && kind !== 'warn') name = NOTIF_KEY_SOUND[key];
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t0 = audioCtx.currentTime + 0.04;
+    NOTIF_SOUNDS[name].forEach(n => playTone(n, t0));
   } catch (e) { /* audio indisponible */ }
 }
 
